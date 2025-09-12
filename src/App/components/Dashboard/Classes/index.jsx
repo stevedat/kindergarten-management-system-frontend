@@ -1,4 +1,4 @@
-import axios from "axios";
+import { supabase } from "../../../../supabaseClient";
 import React, { useContext, useEffect, useState } from "react";
 import Modal from "../../Modal/Modal";
 import "./Classes.css";
@@ -18,41 +18,33 @@ function Classes() {
     },
   };
   useEffect(() => {
-    axios
-      .get(`/teachers/${parseInt(teacher_id)}`, config)
-      .then((data) => setClassroom(data.data.classroom));
-  }, [update]);
-  function asignClass(id) {
-    const data = {
-      teacher_id: parseInt(teacher_id),
-    };
-    fetch(`/classrooms/${id}`, {
-      method: "PATCH",
-      headers: {
-        "content-type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body:JSON.stringify({
-        teacher_id: parseInt(teacher_id)
-      }
-      )
-    }).then(res=>res.json())
-      .then((res) => {
-        console.log(res.data);
-        setUpdate((update) => !update);
-      })
-      .catch((e) => console.log(e.message));
+    async function fetchClassroom() {
+      const { data: classroomData, error } = await supabase
+        .from('classrooms')
+        .select('*')
+        .eq('teacher_id', teacher_id)
+        .single();
+      if (!error) setClassroom(classroomData);
+      else setClassroom(null);
+    }
+    fetchClassroom();
+  }, [update, teacher_id]);
+  async function asignClass(id) {
+    await supabase
+      .from('classrooms')
+      .update({ teacher_id: parseInt(teacher_id) })
+      .eq('id', id);
+    setUpdate((update) => !update);
   }
 
   useEffect(() => {
-    axios
-      .get("/classrooms", {
-        headers: {
-          "content-type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((res) => setAvailableClasses(res.data));
+    async function fetchAvailableClasses() {
+      const { data: classesData, error } = await supabase
+        .from('classrooms')
+        .select('*, teacher:teachers(*)');
+      if (!error) setAvailableClasses(classesData);
+    }
+    fetchAvailableClasses();
   }, []);
   console.log(availableClasses);
 
@@ -70,15 +62,13 @@ function Classes() {
     );
   });
 
-  function handleClick(id) {
-    fetch(`/classrooms/${id}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((res) => setModalData(res.students));
+  async function handleClick(id) {
+    const { data: classroomData, error } = await supabase
+      .from('classrooms')
+      .select('students:students(*)')
+      .eq('id', id)
+      .single();
+    if (!error) setModalData(classroomData.students);
   }
 
   if (classroom === null) {

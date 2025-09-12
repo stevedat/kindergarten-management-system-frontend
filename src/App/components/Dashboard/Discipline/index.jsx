@@ -9,7 +9,7 @@ import {
 import { Link } from "react-router-dom";
 import ViewDiscipline from "../../Modal/ViewDiscipline";
 import AddCase from "../../Modal/AddCase";
-import axios from "axios";
+import { supabase } from "../../../../supabaseClient";
 function Discipline() {
   const [addcase, setAddCase] = useState(false);
   const [view, setView] = useState(false);
@@ -27,17 +27,27 @@ function Discipline() {
   };
 
   useEffect(() => {
-    axios
-      .get(`/teachers/${parseInt(teacher_id)}`, config)
-      .then((res) => setDisciplanes(res.data.classroom.disciplines))
-      .catch((e) => console.log(e.message));
-  }, []);
+    async function fetchDisciplines() {
+      // Get classroom for teacher
+      const { data: classroom, error: classroomError } = await supabase
+        .from('classrooms')
+        .select('id')
+        .eq('teacher_id', teacher_id)
+        .single();
+      if (classroomError || !classroom) return;
+      // Get discipline cases for classroom
+      const { data: disciplineData, error: disciplineError } = await supabase
+        .from('discipline')
+        .select('*')
+        .eq('classroom_id', classroom.id);
+      if (!disciplineError) setDisciplanes(disciplineData);
+    }
+    fetchDisciplines();
+  }, [teacher_id]);
 
-  function handleStudent(arg) {
-    axios
-      .get(`/students/${arg}`, config)
-      .then((res) => console.log(res.data));
-  }
+  // function handleStudent(arg) {
+  //   // Use Supabase if needed
+  // }
   const list = disciplanes.map((d) => <h1>hello</h1>);
   return (
     <div className="px-4 sm:px-6 lg:px-8 m-5">

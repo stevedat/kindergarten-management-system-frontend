@@ -2,6 +2,7 @@ import React, { Component, createContext, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import Signup from "../Signup";
+import { supabase } from "../../../supabaseClient";
 export const TeacherContext = createContext();
 export const TeacherContextProvider = (props) => {
   const navigate = useNavigate();
@@ -21,54 +22,67 @@ export const TeacherContextProvider = (props) => {
     }, 3000);
   }
 
-  function onSubmit(data) {
-    console.log(data);
-    fetch("/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    }).then((res) => {
-      if (res.ok) {
-        res.json().then((teacher) => {
-          localStorage.clear();
-          localStorage.setItem("teacherToken", teacher.jwt);
-          localStorage.setItem("teacher", `${teacher.teacher.id}`)
-          localStorage.setItem("teacher_data", JSON.stringify(teacher));
-          setLogin((onLogin) => teacher);
-         handleNotification()
-          console.log(teacher)
-        });
-      } else {
-        res.json().then((error) => alert(error.errors));
-      }
+  async function onSubmit(data) {
+    // Supabase sign in with email and password
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
     });
+    if (signInError) {
+      alert(signInError.message);
+      return;
+    }
+    // Fetch teacher profile from teachers table
+    const { data: teacherData, error: teacherError } = await supabase
+      .from('teachers')
+      .select('*')
+      .eq('email', data.email)
+      .single();
+    if (teacherError) {
+      alert(teacherError.message);
+      return;
+    }
+    localStorage.clear();
+    localStorage.setItem("teacherToken", signInData.session.access_token);
+    localStorage.setItem("teacher", `${teacherData.id}`);
+    localStorage.setItem("teacher_data", JSON.stringify(teacherData));
+    setLogin((onLogin) => teacherData);
+    handleNotification();
   }
   //  This function is called in the Signup Component
-  function onSubmition(data) {
-    fetch("/teachers", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    }).then((res) => {
-      if (res.ok) {
-        res.json().then((data) => {
-         
-          setTeacher(data);
-          localStorage.clear();
-          console.log(data)
-          localStorage.setItem("teacherToken", data[1].token);
-          localStorage.setItem("teacher", data[0].id);
-          localStorage.setItem("teacher_data", JSON.stringify(data));
-          handleNotification();
-        });
-      } else {
-        res.json().then((error) => alert(error.errors));
-      }
+  async function onSubmition(data) {
+    // Supabase sign up
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
     });
+    if (signUpError) {
+      alert(signUpError.message);
+      return;
+    }
+    // Insert teacher profile into teachers table
+    const { data: teacherData, error: teacherError } = await supabase
+      .from('teachers')
+      .insert([
+        {
+          email: data.email,
+          first_name: data.first_name,
+          last_name: data.last_name,
+          phone_number: data.phone_number,
+          career_name: data.career_name,
+        },
+      ])
+      .select()
+      .single();
+    if (teacherError) {
+      alert(teacherError.message);
+      return;
+    }
+    setTeacher(teacherData);
+    localStorage.clear();
+    localStorage.setItem("teacher", teacherData.id);
+    localStorage.setItem("teacher_data", JSON.stringify(teacherData));
+    handleNotification();
   }
   const token = localStorage.getItem("teacherToken");
   const teacher_id = localStorage.getItem("teacher");

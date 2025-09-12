@@ -5,43 +5,44 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/solid";
 
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
+import { supabase } from "../../../../supabaseClient";
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
 export default function MyKids() {
   const [loading, setLoading] = useState(false);
-  const [teacher, setTeacher] = useState([]);
-  const token = localStorage.getItem("teacherToken");
-  
-  
-  
+  const [students, setStudents] = useState([]);
+  const teacherData = JSON.parse(localStorage.getItem("teacher_data"));
+  const teacher_id = teacherData ? teacherData.id : null;
 
   useEffect(() => {
-    fetch("/profile",{
-      headers: {
-        "content-type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    }).then((res) => res.json())
-      .then((res)=> setTeacher(res[0].classroom.students))
-  }, []);
-  const data = JSON.parse(localStorage.getItem("teacher_data"));
-  localStorage.setItem("kids", teacher )
-  localStorage.setItem("kidState", setTeacher)
-   
-  function handleDelete(id){
-      setTeacher((value) => value.filter((item) => id !== item.id))
-      fetch(`/students/${id}`,{
-        method: "DELETE",
-        headers:{
-          Authorization: `Bearer ${token}`,
-        }
-      })
+    async function fetchStudents() {
+      setLoading(true);
+      const { data: classroom, error: classroomError } = await supabase
+        .from('classrooms')
+        .select('id')
+        .eq('teacher_id', teacher_id)
+        .single();
+      if (classroomError || !classroom) {
+        setLoading(false);
+        return;
+      }
+      const { data: studentsData, error: studentsError } = await supabase
+        .from('students')
+        .select('*')
+        .eq('classroom_id', classroom.id);
+      if (!studentsError) setStudents(studentsData);
+      setLoading(false);
+    }
+    if (teacher_id) fetchStudents();
+  }, [teacher_id]);
+
+  function handleDelete(id) {
+    setStudents((value) => value.filter((item) => id !== item.id));
+    // TODO: Add Supabase delete logic here if needed
   }
 
   
@@ -107,7 +108,7 @@ export default function MyKids() {
                 </div>
 
                 <div className="bg-white w-full">
-                  {teacher.map((person, personIdx) => (
+                  {students.map((person, personIdx) => (
                     <div
                       key={person.id}
                       className="w-full grid grid-cols-5 gap-4">

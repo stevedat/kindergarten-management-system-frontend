@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import { supabase } from "../../../../supabaseClient";
 function Attendance() {
   const [attend, setAttend] = useState([]);
   const [dates, setDates] = useState(null);
@@ -19,29 +19,42 @@ function Attendance() {
   };
   const teacher_id = localStorage.getItem("teacher");
   useEffect(() => {
-    axios
-      .get(`/teachers/${teacher_id}`, config)
-      .then((res) => {
-        setClassroom(res.data.classroom);
-        setKid(res.data.classroom.students);
-      });
+    async function fetchClassroom() {
+      // Get classroom for teacher
+      const { data: classroomData, error: classroomError } = await supabase
+        .from('classrooms')
+        .select('*, students:students(*)')
+        .eq('teacher_id', teacher_id)
+        .single();
+      if (classroomError) return;
+      setClassroom(classroomData);
+      setKid(classroomData.students || []);
+    }
+    fetchClassroom();
   }, []);
 
   useEffect(() => {
-    axios
-      .get("/attendances", config)
-      .then((res) => setAttend(res.data));
+    async function fetchAttendance() {
+      const { data: attendanceData, error: attendanceError } = await supabase
+        .from('attendance')
+        .select('*');
+      if (attendanceError) return;
+      setAttend(attendanceData);
+    }
+    fetchAttendance();
   }, []);
 
   async function takeAttendance(p) {
     setModal2(false);
-    const { data } = await axios.get("/attendances");
-    const ans = data.filter((i) => i.date === p);
+    const { data: attendanceData } = await supabase
+      .from('attendance')
+      .select('*');
+    const ans = (attendanceData || []).filter((i) => i.date === p);
     if (ans.length === 0) {
       let register = kid.map((k, i) => {
         return (
           <li key={i} className="border m-2 grid grid-cols-3 rounded-md p-5">
-            <span>{`${k.first_name} ${k.second_name}`}</span>
+            <span>{`${k.first_name} ${k.last_name || k.second_name || ''}`}</span>
             <button
               onClick={(e) => handlePresent(e, k)}
               className="outline outline-1 text-sky-600 hover:text-white hover:bg-sky-600 px-1 h-10 m-2 rounded-md">
@@ -61,7 +74,7 @@ function Attendance() {
     }
   }
 
-  function handlePresent(e, k) {
+  async function handlePresent(e, k) {
     let myData = {
       classroom_id: classroom.id,
       student_id: k.id,
@@ -69,13 +82,10 @@ function Attendance() {
       status: e.target.innerText,
       date: dates,
     };
-
     e.target.parentElement.style.display = "none";
-    return axios
-      .post("/attendances", myData, config)
-      .then((res) => console.log(res));
+    await supabase.from('attendance').insert([myData]);
   }
-  function handleAbsent(e, k) {
+  async function handleAbsent(e, k) {
     let myData = {
       classroom_id: classroom.id,
       student_id: k.id,
@@ -84,9 +94,7 @@ function Attendance() {
       date: dates,
     };
     e.target.parentElement.style.display = "none";
-    return axios
-      .post("/attendances", myData, config)
-      .then((res) => console.log(res));
+    await supabase.from('attendance').insert([myData]);
   }
 
   return (

@@ -1,8 +1,10 @@
+
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import "./ParentSignup.css";
 import Nav from "../Home/Nav";
+import { supabase } from "../../../supabaseClient";
 
 function ParentSignup() {
   const [parent, setParent] = useState([]);
@@ -25,24 +27,35 @@ function handleClose(){
 
   async function onSubmit(data) {
     setErrors([]);
-    await fetch("/parents", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    }).then((res) => {
-      if (res.ok) {
-        res.json().then((data) => {
-          localStorage.setItem("jwt", data.jwt);
-          localStorage.setItem("parent", `${data.parent.id}`);
-          localStorage.setItem("parent_data", JSON.stringify(data.parent))
-          handleNotification()
-        })
-      } else {
-        res.json().then((error) => alert(error.errors));
-      }
+    // Supabase sign up
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
     });
+    if (signUpError) {
+      alert(signUpError.message);
+      return;
+    }
+    // Insert parent profile into parents table
+    const { data: parentData, error: parentError } = await supabase
+      .from('parents')
+      .insert([
+        {
+          email: data.email,
+          first_name: data.first_name,
+          last_name: data.last_name,
+          phone_number: data.phone_number,
+        },
+      ])
+      .select()
+      .single();
+    if (parentError) {
+      alert(parentError.message);
+      return;
+    }
+    localStorage.setItem("parent", `${parentData.id}`);
+    localStorage.setItem("parent_data", JSON.stringify(parentData));
+    handleNotification();
   }
   return (
 

@@ -1,4 +1,4 @@
-import axios from "axios";
+import { supabase } from "../../../../supabaseClient";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -19,11 +19,16 @@ function AddKid() {
   };
 
   useEffect(() => {
-    axios
-      .get(`/teachers/${parseInt(teacher_id)}`, config)
-      .then((res) => setClassroom(res.data.classroom))
-      .catch((e) => console.log(e.message));
-  }, [update]);
+    async function fetchClassroom() {
+      const { data: classroomData, error } = await supabase
+        .from('classrooms')
+        .select('*')
+        .eq('teacher_id', teacher_id)
+        .single();
+      if (!error) setClassroom(classroomData);
+    }
+    fetchClassroom();
+  }, [update, teacher_id]);
 
   const kid = localStorage.getItem("kids");
   const state = localStorage.getItem("kidState");
@@ -38,30 +43,28 @@ function AddKid() {
     handleClose();
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    setUpdate(update=>!update)
-    fetch("/students", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        admission_number: addKid.admission_number,
-       first_name: addKid.first_name,
-       second_name: addKid.second_name,
-       surname: addKid.surname,
-       description: addKid.description,
-       age: addKid.age,
-       classroom_id: classroom.id
-      }),
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        handleModal();
-        state([...kid, res]);
-      });
+    setUpdate(update => !update);
+    const { data: studentData, error } = await supabase
+      .from('students')
+      .insert([
+        {
+          admission_number: addKid.admission_number,
+          first_name: addKid.first_name,
+          second_name: addKid.second_name,
+          surname: addKid.surname,
+          description: addKid.description,
+          age: addKid.age,
+          classroom_id: classroom.id,
+        },
+      ])
+      .select()
+      .single();
+    if (!error) {
+      handleModal();
+      // Optionally update local state
+    }
   }
 
   function handleChange(e) {
