@@ -51,33 +51,15 @@ export const TeacherContextProvider = (props) => {
   }
   //  This function is called in the Signup Component
   async function onSubmition(data) {
-    // Supabase sign up
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+    // MOCK SIGNUP for demo/testing
+    const teacherData = {
+      id: 1,
       email: data.email,
-      password: data.password,
-    });
-    if (signUpError) {
-      alert(signUpError.message);
-      return;
-    }
-    // Insert teacher profile into teachers table
-    const { data: teacherData, error: teacherError } = await supabase
-      .from('teachers')
-      .insert([
-        {
-          email: data.email,
-          first_name: data.first_name,
-          last_name: data.last_name,
-          phone_number: data.phone_number,
-          career_name: data.career_name,
-        },
-      ])
-      .select()
-      .single();
-    if (teacherError) {
-      alert(teacherError.message);
-      return;
-    }
+      first_name: data.first_name,
+      last_name: data.last_name,
+      phone_number: data.phone_number,
+      career_name: data.career_name,
+    };
     setTeacher(teacherData);
     localStorage.clear();
     localStorage.setItem("teacher", teacherData.id);

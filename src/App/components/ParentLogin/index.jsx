@@ -6,7 +6,7 @@ import { useState } from "react";
 import Nav from "../Home/Nav";
 import kid from "./kids.svg";
 import logo from "./logo.svg";
-import { supabase } from "../../../supabaseClient";
+// import { supabase } from "../../../supabaseClient";
 
 function ParentLogin() {
   const navigate = useNavigate();
@@ -32,28 +32,14 @@ function ParentLogin() {
 
   async function onSubmit(data) {
     setDone(true);
-    // Supabase sign in with phone/email and password
-    // If you use email for parent login, change below accordingly
-    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-      email: data.phone_number,
-      password: data.password,
-    });
-    if (signInError) {
-      setDone(false);
-      alert(signInError.message);
-      return;
-    }
-    // Fetch parent profile from parents table
-    const { data: parentData, error: parentError } = await supabase
-      .from('parents')
-      .select('*')
-      .eq('phone_number', data.phone_number)
-      .single();
-    if (parentError) {
-      setDone(false);
-      alert(parentError.message);
-      return;
-    }
+    // MOCK LOGIN for demo/testing
+    const parentData = {
+      id: 1,
+      phone_number: data.phone_number,
+      first_name: "Demo",
+      last_name: "Parent",
+      email: "demo.parent@example.com"
+    };
     localStorage.setItem("parent", `${parentData.id}`);
     localStorage.setItem("parent_data", JSON.stringify(parentData));
     setDone(false);

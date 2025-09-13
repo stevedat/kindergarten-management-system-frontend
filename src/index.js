@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
-import SupabaseStatus from "./SupabaseStatus";
+// import SupabaseStatus from "./SupabaseStatus";
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -10,7 +10,7 @@ root.render(
   <React.StrictMode>
     <>
       <App />
-      <SupabaseStatus />
+  {/* <SupabaseStatus /> */}
     </>
   </React.StrictMode>
 );
