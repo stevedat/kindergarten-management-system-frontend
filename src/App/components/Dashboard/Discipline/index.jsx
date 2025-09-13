@@ -9,7 +9,7 @@ import {
 import { Link } from "react-router-dom";
 import ViewDiscipline from "../../Modal/ViewDiscipline";
 import AddCase from "../../Modal/AddCase";
-import { supabase } from "../../../../supabaseClient";
+// import { supabase } from "../../../../supabaseClient";
 function Discipline() {
   const [addcase, setAddCase] = useState(false);
   const [view, setView] = useState(false);
@@ -27,22 +27,11 @@ function Discipline() {
   };
 
   useEffect(() => {
-    async function fetchDisciplines() {
-      // Get classroom for teacher
-      const { data: classroom, error: classroomError } = await supabase
-        .from('classrooms')
-        .select('id')
-        .eq('teacher_id', teacher_id)
-        .single();
-      if (classroomError || !classroom) return;
-      // Get discipline cases for classroom
-      const { data: disciplineData, error: disciplineError } = await supabase
-        .from('discipline')
-        .select('*')
-        .eq('classroom_id', classroom.id);
-      if (!disciplineError) setDisciplanes(disciplineData);
-    }
-    fetchDisciplines();
+    // MOCK DATA for demo/testing
+    setDisciplanes([
+      { id: 1, title: 'Late', date: '2025-09-13', student_id: 1, description: 'Arrived late to class', student: { id: 1 } },
+      { id: 2, title: 'Disruptive', date: '2025-09-12', student_id: 2, description: 'Talked during lesson', student: { id: 2 } },
+    ]);
   }, [teacher_id]);
 
   // function handleStudent(arg) {

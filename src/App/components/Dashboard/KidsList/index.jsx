@@ -7,7 +7,7 @@ import {
 
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "../../../../supabaseClient";
+// import { supabase } from "../../../../supabaseClient";
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
@@ -19,25 +19,16 @@ export default function MyKids() {
   const teacher_id = teacherData ? teacherData.id : null;
 
   useEffect(() => {
-    async function fetchStudents() {
-      setLoading(true);
-      const { data: classroom, error: classroomError } = await supabase
-        .from('classrooms')
-        .select('id')
-        .eq('teacher_id', teacher_id)
-        .single();
-      if (classroomError || !classroom) {
-        setLoading(false);
-        return;
-      }
-      const { data: studentsData, error: studentsError } = await supabase
-        .from('students')
-        .select('*')
-        .eq('classroom_id', classroom.id);
-      if (!studentsError) setStudents(studentsData);
+    // MOCK DATA for demo/testing
+    setLoading(true);
+    setTimeout(() => {
+      setStudents([
+        { id: 1, admission_number: 'A001', first_name: 'Alice', second_name: 'Marie', surname: 'Smith' },
+        { id: 2, admission_number: 'A002', first_name: 'Bob', second_name: 'John', surname: 'Doe' },
+        { id: 3, admission_number: 'A003', first_name: 'Charlie', second_name: 'Lee', surname: 'Brown' },
+      ]);
       setLoading(false);
-    }
-    if (teacher_id) fetchStudents();
+    }, 500);
   }, [teacher_id]);
 
   function handleDelete(id) {
@@ -114,7 +105,7 @@ export default function MyKids() {
                       className="w-full grid grid-cols-5 gap-4">
                       <div
                         className={classNames(
-                          personIdx !== teacher.length - 1
+                          personIdx !== students.length - 1
                             ? "border-b border-gray-200"
                             : "",
                           "whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8"
@@ -123,7 +114,7 @@ export default function MyKids() {
                       </div>
                       <div
                         className={classNames(
-                          personIdx !== teacher.length - 1
+                          personIdx !== students.length - 1
                             ? "border-b border-gray-200"
                             : "",
                           "whitespace-nowrap px-3 py-4 text-sm text-gray-500 hidden lg:table-cell"
@@ -132,7 +123,7 @@ export default function MyKids() {
                       </div>
                       <div
                         className={classNames(
-                          personIdx !== teacher.length - 1
+                          personIdx !== students.length - 1
                             ? "border-b border-gray-200"
                             : "",
                           "whitespace-nowrap px-3 py-4 text-sm text-gray-500"
@@ -141,7 +132,7 @@ export default function MyKids() {
                       </div>
                       <div
                         className={classNames(
-                          personIdx !== teacher.length - 1
+                          personIdx !== students.length - 1
                             ? "border-b border-gray-200"
                             : "",
                           "whitespace-nowrap px-3 py-4 text-sm text-gray-500"

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../../../../supabaseClient";
+// import { supabase } from "../../../../supabaseClient";
 function Attendance() {
   const [attend, setAttend] = useState([]);
   const [dates, setDates] = useState(null);
@@ -19,82 +19,53 @@ function Attendance() {
   };
   const teacher_id = localStorage.getItem("teacher");
   useEffect(() => {
-    async function fetchClassroom() {
-      // Get classroom for teacher
-      const { data: classroomData, error: classroomError } = await supabase
-        .from('classrooms')
-        .select('*, students:students(*)')
-        .eq('teacher_id', teacher_id)
-        .single();
-      if (classroomError) return;
-      setClassroom(classroomData);
-      setKid(classroomData.students || []);
-    }
-    fetchClassroom();
+    // MOCK DATA for demo/testing
+    setClassroom({ id: 1, name: 'Class A' });
+    setKid([
+      { id: 1, first_name: 'Alice', last_name: 'Smith' },
+      { id: 2, first_name: 'Bob', last_name: 'Doe' },
+      { id: 3, first_name: 'Charlie', last_name: 'Brown' },
+    ]);
   }, []);
 
   useEffect(() => {
-    async function fetchAttendance() {
-      const { data: attendanceData, error: attendanceError } = await supabase
-        .from('attendance')
-        .select('*');
-      if (attendanceError) return;
-      setAttend(attendanceData);
-    }
-    fetchAttendance();
+    // MOCK DATA for demo/testing
+    setAttend([
+      { id: 1, classroom_id: 1, student_id: 1, student_name: 'Alice', status: 'Present', date: '2025-09-13' },
+      { id: 2, classroom_id: 1, student_id: 2, student_name: 'Bob', status: 'Absent', date: '2025-09-13' },
+    ]);
   }, []);
 
-  async function takeAttendance(p) {
+  function takeAttendance(p) {
     setModal2(false);
-    const { data: attendanceData } = await supabase
-      .from('attendance')
-      .select('*');
-    const ans = (attendanceData || []).filter((i) => i.date === p);
-    if (ans.length === 0) {
-      let register = kid.map((k, i) => {
-        return (
-          <li key={i} className="border m-2 grid grid-cols-3 rounded-md p-5">
-            <span>{`${k.first_name} ${k.last_name || k.second_name || ''}`}</span>
-            <button
-              onClick={(e) => handlePresent(e, k)}
-              className="outline outline-1 text-sky-600 hover:text-white hover:bg-sky-600 px-1 h-10 m-2 rounded-md">
-              Present
-            </button>
-            <button
-              onClick={(e) => handleAbsent(e, k)}
-              className="outline outline-1 text-red-500 hover:text-white hover:bg-red-600 px-1 h-10 m-2 rounded-md">
-              Absent
-            </button>
-          </li>
-        );
-      });
-      setData(register);
-    } else {
-      setData("attendance already taken");
-    }
+    // MOCK: always allow taking attendance
+    let register = kid.map((k, i) => {
+      return (
+        <li key={i} className="border m-2 grid grid-cols-3 rounded-md p-5">
+          <span>{`${k.first_name} ${k.last_name || k.second_name || ''}`}</span>
+          <button
+            onClick={(e) => handlePresent(e, k)}
+            className="outline outline-1 text-sky-600 hover:text-white hover:bg-sky-600 px-1 h-10 m-2 rounded-md">
+            Present
+          </button>
+          <button
+            onClick={(e) => handleAbsent(e, k)}
+            className="outline outline-1 text-red-500 hover:text-white hover:bg-red-600 px-1 h-10 m-2 rounded-md">
+            Absent
+          </button>
+        </li>
+      );
+    });
+    setData(register);
   }
 
-  async function handlePresent(e, k) {
-    let myData = {
-      classroom_id: classroom.id,
-      student_id: k.id,
-      student_name: k.first_name,
-      status: e.target.innerText,
-      date: dates,
-    };
+  function handlePresent(e, k) {
     e.target.parentElement.style.display = "none";
-    await supabase.from('attendance').insert([myData]);
+    // MOCK: no-op
   }
-  async function handleAbsent(e, k) {
-    let myData = {
-      classroom_id: classroom.id,
-      student_id: k.id,
-      student_name: k.first_name,
-      status: e.target.innerText,
-      date: dates,
-    };
+  function handleAbsent(e, k) {
     e.target.parentElement.style.display = "none";
-    await supabase.from('attendance').insert([myData]);
+    // MOCK: no-op
   }
 
   return (

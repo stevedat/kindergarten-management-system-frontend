@@ -1,4 +1,4 @@
-import { supabase } from "../../../../supabaseClient";
+// import { supabase } from "../../../../supabaseClient";
 import React, { useContext, useEffect, useState } from "react";
 import Modal from "../../Modal/Modal";
 import "./Classes.css";
@@ -18,33 +18,20 @@ function Classes() {
     },
   };
   useEffect(() => {
-    async function fetchClassroom() {
-      const { data: classroomData, error } = await supabase
-        .from('classrooms')
-        .select('*')
-        .eq('teacher_id', teacher_id)
-        .single();
-      if (!error) setClassroom(classroomData);
-      else setClassroom(null);
-    }
-    fetchClassroom();
+    // MOCK DATA for demo/testing
+    setClassroom({ id: 1, name: 'Class A' });
   }, [update, teacher_id]);
-  async function asignClass(id) {
-    await supabase
-      .from('classrooms')
-      .update({ teacher_id: parseInt(teacher_id) })
-      .eq('id', id);
+  function asignClass(id) {
+    // MOCK: no-op for demo
     setUpdate((update) => !update);
   }
 
   useEffect(() => {
-    async function fetchAvailableClasses() {
-      const { data: classesData, error } = await supabase
-        .from('classrooms')
-        .select('*, teacher:teachers(*)');
-      if (!error) setAvailableClasses(classesData);
-    }
-    fetchAvailableClasses();
+    // MOCK DATA for demo/testing
+    setAvailableClasses([
+      { id: 1, name: 'Class A', teacher: { career_name: 'Ms. Smith' } },
+      { id: 2, name: 'Class B', teacher: { career_name: 'Mr. Doe' } },
+    ]);
   }, []);
   console.log(availableClasses);
 
@@ -62,13 +49,12 @@ function Classes() {
     );
   });
 
-  async function handleClick(id) {
-    const { data: classroomData, error } = await supabase
-      .from('classrooms')
-      .select('students:students(*)')
-      .eq('id', id)
-      .single();
-    if (!error) setModalData(classroomData.students);
+  function handleClick(id) {
+    // MOCK DATA for demo/testing
+    setModalData([
+      { id: 1, first_name: 'Alice', second_name: 'Marie', surname: 'Smith' },
+      { id: 2, first_name: 'Bob', second_name: 'John', surname: 'Doe' },
+    ]);
   }
 
   if (classroom === null) {
